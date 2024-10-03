@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Shop</title>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <h1>Welcome to QR Code Shop</h1>
+
+    <!-- Display list of products -->
+    <ul>
+        {% for product_id, product in products.items() %}
+        <li>
+            <h3>{{ product.name }} - KES: {{ product.price }}</h3>
+            <!-- Link to view the QR code for each product -->
+            <img src="{{ url_for('generate_qr', product_id=product_id) }}" alt="QR Code for {{ product.name }}" style="width:150px;height:150px;">
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- QR Code scanner section -->
+    <div id="qr-reader" style="width: 300px;"></div>
+    <div id="qr-result"></div>
+
+    <script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+</body>
+</html>
