@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, jsonify, url_for
+from flask_sqlalchemy import SQLAlchemy
 import requests
 import json
 import base64
@@ -8,11 +9,17 @@ import io
 import os
 from flask import send_file
 from dotenv import load_dotenv
+from admin_auth.auth import requires_auth
 
 
 app = Flask(__name__)
 
 load_dotenv()
+
+# Database configurations
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///products.db"
+app.config["SQLALCHEMY_TRACK_mODIFICATIONS"] = False
+db = SQLAlchemy(app)
 
 # Configure M-Pesa keys
 MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")
@@ -22,10 +29,83 @@ MPESA_PASSKEY = os.getenv("MPESA_PASSKEY")
 MPESA_CALLBACK_URL = 'https://your-domain.com/mpesa_callback'
 
 
-products = {
-  1: {"name": "Phone", "price": 109000},
-  2: {"name": "Laptop", "price": 256000},
-}
+class Product(db.Model):
+   id = db.Column(db.Integer, primary_key=True)
+   name = db.Column(db.String(100), nullable=False)
+   price = db.Column(db.Float, nullable=False)
+
+
+# Create database and table
+with app.app_context():
+   db.create_all()
+
+
+# Home Page
+@app.route("/")
+def home_page():
+  products = Product.query.all()
+  return render_template("home.html", products=products)
+
+
+# Admin endpoint to add Product
+@app.route('/add_product', methods=['GET', 'POST'])
+@requires_auth
+def add_product():
+    if request.method == "GET":
+       return render_template("products.html")
+    
+    if request.content_type == 'application/json':
+        # Handle JSON request
+        data = request.json
+        name = data.get('name')
+        price = data.get('price')
+    else:
+        # Handle form submission
+        name = request.form.get('name')
+        price = request.form.get('price')
+
+    # Validate inputs
+    if not name or not price:
+        return jsonify({"error": "Invalid product data"}), 400
+    
+
+    # Convert proce to float
+    try:
+       price = float(price)
+    except ValueError:
+       return jsonify({"error": "Price must be a number"}), 400
+    
+    # Add a product to database
+    product = Product(name=name, price=price)
+    db.session.add(product)
+    db.session.commit()
+
+    return jsonify({"message": "Product added successfully", "product": {"id": product.id, "name": product.name, "price": product.price}})
+
+
+# QR generation for Product
+@app.route("/qr_code/<int:product_id>")
+def generate_qr(product_id):
+  product = Product.query.get(product_id)
+  if not product:
+    return "Product not found", 404
+  
+  # Create a QR code with product info
+  qr = qrcode.QRCode(version=1, box_size=10, border=5)
+  qr_data = {
+    "id": product_id,
+    "name": product.name,
+    "price": product.price
+  }
+
+  qr.add_data(qr_data)
+  qr.make(fit=True)
+
+  img = qr.make_image(fill="black", back_color="white")
+  buf = io.BytesIO()
+  img.save(buf)
+  buf.seek(0)
+  return send_file(buf, mimetype="image/png")
 
 
 # Access token for MPesa API 
@@ -46,7 +126,7 @@ def initiate_payment():
     phone_number = request.json.get('phone_number')
 
     # Fetch the product details
-    product = products.get(product_id)
+    product = Product.query.get(product_id)
     if not product:
         return jsonify({"error": "Product not found"}), 404
 
@@ -64,8 +144,8 @@ def initiate_payment():
         "PartyB": MPESA_SHORTCODE,
         "PhoneNumber": phone_number,
         "CallBackURL": MPESA_CALLBACK_URL,
-        "AccountReference": str(product['id']),
-        "TransactionDesc": f"Payment for {product['name']}"
+        "AccountReference": str(product.id),
+        "TransactionDesc": f"Payment for {product.name}"
     }
 
     headers = {"Authorization": f"Bearer {access_token}"}
@@ -93,34 +173,6 @@ def mpesa_callback():
     else:
         # Payment failed
         return jsonify({"error": "Payment failed"}), 400
-
-@app.route("/")
-def home_page():
-  return render_template("home.html", products=products)
-
-# QR generation
-@app.route("/qr_code/<int:product_id>")
-def generate_qr(product_id):
-  product = products.get(product_id)
-  if not product:
-    return "Product not found", 404
-  
-  # Create a QR code with product info
-  qr = qrcode.QRCode(version=1, box_size=10, border=5)
-  qr_data = {
-    "id": product_id,
-    "name": product["name"],
-    "price": product["price"]
-  }
-
-  qr.add_data(qr_data)
-  qr.make(fit=True)
-
-  img = qr.make_image(fill="black", back_color="white")
-  buf = io.BytesIO()
-  img.save(buf)
-  buf.seek(0)
-  return send_file(buf, mimetype="image/png")
 
 
 if __name__ == "__main__":
