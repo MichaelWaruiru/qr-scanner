@@ -11,19 +11,51 @@
 
     <!-- Display list of products -->
     <ul>
-        {% for product_id, product in products.items() %}
+        {% for product in products %}
         <li>
             <h3>{{ product.name }} - KES: {{ product.price }}</h3>
             <!-- Link to view the QR code for each product -->
-            <img src="{{ url_for('generate_qr', product_id=product_id) }}" alt="QR Code for {{ product.name }}" style="width:150px;height:150px;">
+            <img src="{{ url_for('generate_qr', product_id=product.id) }}" alt="QR Code for {{ product.name }}" style="width:150px;height:150px;">
         </li>
         {% endfor %}
     </ul>
 
     <!-- QR Code scanner section -->
-    <div id="qr-reader" style="width: 300px;"></div>
-    <div id="qr-result"></div>
+    <!-- <h2>Scan QR Code to Buy:</h2>
+    <div id="qr-reader" style="width: 300px; border: 1px solid #ccc; padding: 10px;"></div>
+    <p>Scan Result: <span id="qr-result"></span></p> -->
 
-    <script src="{{ url_for('static', filename='js/scanner.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/scanner.js') }}"></script> -->
+     
+     <!-- Inline Script for QR Code Scanning -->
+    <script>
+        // Initialize QR Code scanner
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById('qr-result').innerText = decodedText;
+
+            // Redirect to initiate payment with product ID from QR code
+            const productData = JSON.parse(decodedText);
+            const productId = productData.id;
+
+            if (productId) {
+                const phoneNumber = prompt("Enter your phone number to complete the payment:");
+                if (phoneNumber) {
+                    fetch('/initiate_payment', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: productId, phone_number: phoneNumber })
+                    })
+                    .then(response => response.json())
+                    .then(data => alert(data.message || data.error))
+                    .catch(err => alert("Payment failed. Please try again."));
+                }
+            } else {
+                alert("Invalid QR code.");
+            }
+        }
+
+        const qrReader = new Html5Qrcode("qr-reader");
+        qrReader.start({ facingMode: "environment" }, {}, onScanSuccess);
+    </script>
 </body>
 </html>
