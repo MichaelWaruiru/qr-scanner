@@ -1,26 +1,40 @@
-from flask import Response, request
+from flask import session, request, redirect, url_for, render_template, flash
 import os
 
 # Define admin credentials
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")
 
-def authenticate():
-  """Send a 401 response for authorized access."""
-  return Response(
-    "Could not verify your access level for that URL. \n"
-    "You have to login with proper credentials",
-    401,
-    {"WWW-Authenticate": "Basic realm='Login Required'"}
-  )
 
-def requires_auth(func):
-  """Decorator to require authentication for specific routes."""
+def login_required(func):
+  """Decorator to require login for specific routes."""
   from functools import wraps
   @wraps(func)
   def decorated(*args, **kwargs):
-    auth = request.authorization
-    if not auth or auth.username != ADMIN_USERNAME or auth.password != ADMIN_PASSWORD:
-      return authenticate()
+    if not session.get("admin_logged_in"):
+      flash("Please log in to access the admin page.", "warning")
+      return redirect(url_for("admin_login"))
     return func(*args, **kwargs)
   return decorated
+
+
+def admin_login():
+  if request.method == "POST":
+    username = request.form.get("username")
+    password = request.form.get("password")
+
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+      session["admin_logged_in"] = True
+      flash("Logged in successfully.", "success")
+      return redirect(url_for("add_product"))
+    else:
+      flash("Invalid username or password.", "danger")
+
+  return render_template("login.html")
+
+
+# Logout route
+def admin_logout():
+  session.pop("admin_logged_in", None)
+  flash("You have been logged out.", "info")
+  return redirect(url_for("admin_login"))

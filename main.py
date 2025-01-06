@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, flash, redirect, url_for
 from flask_sqlalchemy import SQLAlchemy
 import requests
 import json
@@ -9,11 +9,11 @@ import io
 import os
 from flask import send_file
 from dotenv import load_dotenv
-from admin_auth.auth import requires_auth
+from admin_auth.auth import login_required, admin_login, admin_logout
 
 
 app = Flask(__name__)
-
+app.secret_key = os.getenv("SECRET_KEY")
 load_dotenv()
 
 # Database configurations
@@ -47,25 +47,27 @@ def home_page():
   return render_template("home.html", products=products)
 
 
+# Admin login route
+app.add_url_rule('/admin/login', 'admin_login', admin_login, methods=['GET', 'POST'])
+
+# Admin logout route
+app.add_url_rule('/admin/logout', 'admin_logout', admin_logout)
+
+
 # Admin endpoint to add Product
 @app.route('/add_product', methods=['GET', 'POST'])
-@requires_auth
+@login_required
 def add_product():
     if request.method == "GET":
        return render_template("products.html")
-    
-    if request.content_type == 'application/json':
-        # Handle JSON request
-        data = request.json
-        name = data.get('name')
-        price = data.get('price')
-    else:
-        # Handle form submission
-        name = request.form.get('name')
-        price = request.form.get('price')
+
+    # Handle form submission
+    name = request.form.get('name')
+    price = request.form.get('price')
 
     # Validate inputs
     if not name or not price:
+        flash("Invalid product data.", "danger")
         return jsonify({"error": "Invalid product data"}), 400
     
 
@@ -73,6 +75,7 @@ def add_product():
     try:
        price = float(price)
     except ValueError:
+       flash("Price must be a number.", "danger")
        return jsonify({"error": "Price must be a number"}), 400
     
     # Add a product to database
@@ -80,7 +83,8 @@ def add_product():
     db.session.add(product)
     db.session.commit()
 
-    return jsonify({"message": "Product added successfully", "product": {"id": product.id, "name": product.name, "price": product.price}})
+    flash("Product added successfully!", "success")
+    return redirect(url_for('add_product'))
 
 
 # QR generation for Product
