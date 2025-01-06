@@ -1,0 +1,16 @@
+.login-form, h1 {
+  text-align: center;
+}
+
+input {
+  padding: 0.5rem;
+}
+
+.login-button {
+  background-color: hsl(120, 92%, 42%);
+  font-size: 16px;
+  padding: 5px 20px;
+  cursor: pointer;
+  border: none;
+  border-radius: 8px;
+}
