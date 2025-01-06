@@ -1,0 +1,22 @@
+.success {
+  color: green;
+}
+
+.danger {
+  color: red;
+}
+
+.info {
+  color: blue;
+}
+
+title {
+  text-align: center;
+}
+
+.flash-messages {
+  text-align: center;
+  background-color: hsl(208, 69%, 83%);
+  list-style: none;
+  width: auto;
+}
