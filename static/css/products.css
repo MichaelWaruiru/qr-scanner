@@ -14,5 +14,5 @@
 
 .add-product:hover {
   background-color: hsl(120, 92%, 42%);
-  transition: all ease 1s;
+  transition: all 1s ease;
 }

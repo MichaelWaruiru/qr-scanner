@@ -9,5 +9,5 @@
 
 .logout-button:hover {
   background-color: hsl(0, 83%, 60%);
-  transition: all ease 1s;
+  transition: all 1s ease;
 }
