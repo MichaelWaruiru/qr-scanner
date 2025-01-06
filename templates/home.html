@@ -1,16 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Shop</title>
-    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
-</head>
-<body>
+{% extends "base.html" %}
+
+{% block title %}QR Code Shop{% endblock %}
+
+{% block content %}
     <h1>Welcome to QR Code Shop</h1>
 
     <!-- Display list of products -->
-    <ul>
+    <ul class="products">
         {% for product in products %}
         <li>
             <h3>{{ product.name }} - KES: {{ product.price }}</h3>
@@ -20,14 +16,7 @@
         {% endfor %}
     </ul>
 
-    <!-- QR Code scanner section -->
-    <!-- <h2>Scan QR Code to Buy:</h2>
-    <div id="qr-reader" style="width: 300px; border: 1px solid #ccc; padding: 10px;"></div>
-    <p>Scan Result: <span id="qr-result"></span></p> -->
-
-    <!-- <script src="{{ url_for('static', filename='js/scanner.js') }}"></script> -->
-     
-     <!-- Inline Script for QR Code Scanning -->
+    <!-- Inline Script for QR Code Scanning -->
     <script>
         // Initialize QR Code scanner
         function onScanSuccess(decodedText, decodedResult) {
@@ -57,5 +46,4 @@
         const qrReader = new Html5Qrcode("qr-reader");
         qrReader.start({ facingMode: "environment" }, {}, onScanSuccess);
     </script>
-</body>
-</html>
+{% endblock %}
