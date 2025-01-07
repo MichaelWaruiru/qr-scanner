@@ -10,6 +10,7 @@ import os
 from flask import send_file
 from dotenv import load_dotenv
 from admin_auth.auth import login_required, admin_login, admin_logout
+from werkzeug.utils import secure_filename
 
 
 app = Flask(__name__)
@@ -17,9 +18,15 @@ app.secret_key = os.getenv("SECRET_KEY")
 load_dotenv()
 
 # Database configurations
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///products.db"
-app.config["SQLALCHEMY_TRACK_mODIFICATIONS"] = False
+app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///test.db"
+app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 db = SQLAlchemy(app)
+
+# Configure upload folder
+app.config['UPLOAD_FOLDER'] = 'static/uploads'
+
+# Allowed image extensions
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
 
 # Configure M-Pesa keys
 MPESA_CONSUMER_KEY = os.getenv("MPESA_CONSUMER_KEY")
@@ -33,6 +40,8 @@ class Product(db.Model):
    id = db.Column(db.Integer, primary_key=True)
    name = db.Column(db.String(100), nullable=False)
    price = db.Column(db.Float, nullable=False)
+   image_filename = db.Column(db.String(255), nullable=True)
+   description = db.Column(db.String(255), nullable=True)
 
 
 # Create database and table
@@ -54,6 +63,11 @@ app.add_url_rule('/admin/login', 'admin_login', admin_login, methods=['GET', 'PO
 app.add_url_rule('/admin/logout', 'admin_logout', admin_logout)
 
 
+# Check if the image file is allowed
+def allowed_image_file(filename):
+   return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
 # Admin endpoint to add Product
 @app.route('/add_product', methods=['GET', 'POST'])
 @login_required
@@ -64,12 +78,24 @@ def add_product():
     # Handle form submission
     name = request.form.get('name')
     price = request.form.get('price')
+    image = request.files.get('image')
+    description = request.form.get('description')
+
+    print("Image uploaded", image)
 
     # Validate inputs
     if not name or not price:
         flash("Invalid product data.", "danger")
         return jsonify({"error": "Invalid product data"}), 400
     
+
+    # Validate image file
+    if image and allowed_image_file(image.filename):
+       image_filename = secure_filename(image.filename)
+       image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
+       image.save(image_path)
+    else:
+       image_filename = None
 
     # Convert proce to float
     try:
@@ -79,7 +105,7 @@ def add_product():
        return jsonify({"error": "Price must be a number"}), 400
     
     # Add a product to database
-    product = Product(name=name, price=price)
+    product = Product(name=name, price=price, description=description, image_filename=image_filename)
     db.session.add(product)
     db.session.commit()
 

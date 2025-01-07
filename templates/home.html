@@ -10,6 +10,10 @@
         {% for product in products %}
         <li>
             <h3>{{ product.name }} - KES: {{ product.price }}</h3>
+            {% if product.image_filename %}
+                <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="Image of {{ product.name }}" style="width: 150px;height: 150px;">
+            {% endif %}
+            <p>{{ product.description }}</p>
             <!-- Link to view the QR code for each product -->
             <img src="{{ url_for('generate_qr', product_id=product.id) }}" alt="QR Code for {{ product.name }}" style="width:150px;height:150px;">
         </li>

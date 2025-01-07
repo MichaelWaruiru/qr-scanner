@@ -9,7 +9,13 @@
         <input type="text" id="name" name="name" placeholder="Product Name" required><br><br>
 
         <label for="price">Product Price:</label><br>
-        <input type="number" step="1" id="price" name="price" placeholder="Price" required><br><br>
+        <input type="number" step="1" id="price" name="price" placeholder="Price" required><br>
+
+        <label for="description">Product Description:</label><br>
+        <textarea name="description" id="description" placeholder="Add product description" required></textarea><br>
+
+        <label for="image">Product Image:</label><br>
+        <input type="file" name="image" id="image" accept="image/*" required><br><br>
 
         <button class="add-product" type="submit">Add Product</button>
         <br>
