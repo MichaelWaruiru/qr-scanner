@@ -1,18 +1,53 @@
-Generic single-database configuration.
+# Generic Single-Database Configuration
 
-This is used to alter table in sqlite since you can't do it like in SQL.
+This guide explains how to perform table alterations in SQLite using Alembic, as SQLite does not natively support table alterations in the same way as other SQL databases.
 
-In alembic you go through these steps:
-    # pip install alembic
-    # alembic init alembic - This creates alembic.ini where you modify this line: sqlalchemy.url = sqlite:///yourdatabase.db
-    # In alembic folder, there's is script.py.mako where you can add these: 
-        revision = 'head'
-        down_revision = None
+## Steps to Modify Tables in SQLite Using Alembic
 
-        and in def upgrade(): you add the columns that you want to add like this: op.add_column('product', sa.Column('image_filename', sa.String(length=255), nullable=True))
-        op.add_column('product', sa.Column('description', sa.String(length=255), nullable=True))
+### 1. Install Alembic
+```bash
+pip install alembic
+```
 
-        and in def downgrade(): you add like such line: op.drop_column('product', 'image_filename')
-        op.drop_column('product', 'description')
+### 2. Initialize Alembic
+```bash
+alembic init alembic
+```
+This command creates an `alembic.ini` file. Modify the following line in `alembic.ini` to point to your SQLite database:
+```ini
+sqlalchemy.url = sqlite:///yourdatabase.db
+```
 
-    # apply migration using alembic upgrade head - This will create a new database instance.
+### 3. Configure Migration Script
+Inside the `alembic` folder, locate the `script.py.mako` file. Update it with the following details:
+```python
+revision = 'head'
+down_revision = None
+```
+
+### 4. Define Migration Logic
+In the migration script, define the changes you want to apply:
+- **Upgrade:** Add columns to the table.
+- **Downgrade:** Remove columns from the table.
+
+#### Example:
+```python
+def upgrade():
+    op.add_column('product', sa.Column('image_filename', sa.String(length=255), nullable=True))
+    op.add_column('product', sa.Column('description', sa.String(length=255), nullable=True))
+
+def downgrade():
+    op.drop_column('product', 'image_filename')
+    op.drop_column('product', 'description')
+```
+
+### 5. Apply the Migration
+Run the following command to apply the migration:
+```bash
+alembic upgrade head
+```
+This will create a new database instance with the specified changes applied.
+
+## Notes
+- Ensure your database file path is correctly specified in `alembic.ini`.
+- Always back up your database before applying migrations.
