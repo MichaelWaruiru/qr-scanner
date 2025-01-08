@@ -24,6 +24,7 @@ db = SQLAlchemy(app)
 
 # Configure upload folder
 app.config['UPLOAD_FOLDER'] = 'static/uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB
 
 # Allowed image extensions
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg", "gif"}
@@ -89,15 +90,27 @@ def add_product():
         return jsonify({"error": "Invalid product data"}), 400
     
 
-    # Validate image file
+    # Validate and save image file
     if image and allowed_image_file(image.filename):
        image_filename = secure_filename(image.filename)
        image_path = os.path.join(app.config['UPLOAD_FOLDER'], image_filename)
-       image.save(image_path)
-    else:
-       image_filename = None
 
-    # Convert proce to float
+       # Ensure the upload directory exists
+       if not os.path.exists(app.config['UPLOAD_FOLDER']):
+           os.makedirs(app.config['UPLOAD_FOLDER'])
+
+       try:
+        print("Saving image to:", image_path)
+        image.save(image_path)
+       except Exception as e:
+          app.logger.error(f"Error saving image: {e}")
+          flash(f"Failed to save image: {str(e)}", "danger")
+          return redirect(url_for("add_product"))
+    else:
+        flash("Invalid image file.", "danger")
+        return redirect(url_for("add_product"))
+
+    # Convert price to float
     try:
        price = float(price)
     except ValueError:
