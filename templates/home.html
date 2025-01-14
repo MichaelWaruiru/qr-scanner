@@ -21,6 +21,7 @@
     </ul>
 
     <!-- Inline Script for QR Code Scanning -->
+     <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script>
         // Initialize QR Code scanner
         function onScanSuccess(decodedText, decodedResult) {
@@ -29,6 +30,7 @@
             // Redirect to initiate payment with product ID from QR code
             const productData = JSON.parse(decodedText);
             const productId = productData.id;
+            const productPrice = productData.price
 
             if (productId) {
                 const phoneNumber = prompt("Enter your phone number to complete the payment:");
