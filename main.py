@@ -182,7 +182,7 @@ def initiate_payment():
         "Password": password,
         "Timestamp": timestamp,
         "TransactionType": "CustomerPayBillOnline",
-        "Amount": product['price'],  # Use product price from QR code
+        "Amount": product.price,  # Use product price from QR code
         "PartyA": phone_number,  # Customer's phone number
         "PartyB": MPESA_SHORTCODE,
         "PhoneNumber": phone_number,
