@@ -1,11 +1,11 @@
 .products {
-  /* text-align: center; */
+  text-align: center;
   list-style: none;
   padding: 0;
   margin: 0;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
+  /* justify-content: center; */
 }
 
 .product-item {
