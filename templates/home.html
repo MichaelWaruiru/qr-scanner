@@ -14,6 +14,9 @@
                 <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="Image of {{ product.name }}" class="product-image">
             {% endif %}
             <p class="product-description">
+                <span><strong>Description</strong></span>
+                <br>
+                <br>
                 <span class="short-description">{{ product.description[:100] }}...</span>
                 <br>
                 <br>
