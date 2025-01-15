@@ -13,7 +13,16 @@
             {% if product.image_filename %}
                 <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="Image of {{ product.name }}" class="product-image">
             {% endif %}
-            <p>{{ product.description }}</p>
+            <p class="product-description">
+                <span class="short-description">{{ product.description[:100] }}...</span>
+                <br>
+                <br>
+                <span class="full-description" style="display:none;">{{ product.description }}</span>
+                <a href="#" class="read-more" onclick="toggleDescription(event, this)">Read More</a>
+                <br>
+                <br>
+                <a href="#" class="show-less" style="display:none;" onclick="toggleDescription(event, this)">Show Less</a>
+            </p>
             <!-- Link to view the QR code for each product -->
             <img src="{{ url_for('generate_qr', product_id=product.id) }}" alt="QR Code for {{ product.name }}" class="product-qr">
         </li>
@@ -21,7 +30,7 @@
     </ul>
 
     <!-- Inline Script for QR Code Scanning -->
-     <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode/minified/html5-qrcode.min.js"></script>
     <script>
         // Initialize QR Code scanner
         function onScanSuccess(decodedText, decodedResult) {
@@ -51,5 +60,27 @@
 
         const qrReader = new Html5Qrcode("qr-reader");
         qrReader.start({ facingMode: "environment" }, {}, onScanSuccess);
+
+        // Toggle description visibility
+        function toggleDescription(event, element) {
+            event.preventDefault();
+            const description = element.parentElement;
+            const shortDescription = description.querySelector('.short-description');
+            const fullDescription = description.querySelector('.full-description');
+            const readMore = description.querySelector('.read-more');
+            const showLess = description.querySelector('.show-less');
+
+            if (fullDescription.style.display === 'none') {
+                fullDescription.style.display = 'inline';
+                shortDescription.style.display = 'none';
+                readMore.style.display = 'none';
+                showLess.style.display = 'inline';
+            } else {
+                fullDescription.style.display = 'none';
+                shortDescription.style.display = 'inline';
+                readMore.style.display = 'inline';
+                showLess.style.display = 'none';
+            }
+        }
     </script>
 {% endblock %}
