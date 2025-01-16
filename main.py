@@ -111,11 +111,11 @@ def add_product():
         return redirect(url_for("add_product"))
 
     # Convert price to float
-    try:
-       price = float(price)
-    except ValueError:
-       flash("Price must be a number.", "danger")
-       return jsonify({"error": "Price must be a number"}), 400
+    # try:
+    #    price = float(price)
+    # except ValueError:
+    #    flash("Price must be a number.", "danger")
+    #    return jsonify({"error": "Price must be a number"}), 400
     
     # Add a product to database
     product = Product(name=name, price=price, description=description, image_filename=image_filename)
@@ -124,6 +124,76 @@ def add_product():
 
     flash("Product added successfully!", "success")
     return redirect(url_for('add_product'))
+
+
+# Edit product route
+@app.route("/edit_product", methods=["POST"])
+@login_required
+def edit_product():
+    product_id = request.form.get("product_id")
+    products = Product.query.get(product_id)
+    if not product:
+        flash("Product not found", "danger")
+        return redirect(url_for("home_page"))
+
+    name = request.form.get("name")
+    price = request.form.get("price")
+    description = request.form.get("description")
+    image = request.files.get("image")
+
+    # Validate the inputs
+    if not name or not price:
+        flash("Invalid product data", "danger")
+        return redirct(url_for("edit_product", product_id=product_id))
+
+    # Validate and save image file
+    if image and allowed_image_file(image.file):
+        image_filename = secure_filename(image.filename)
+        image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
+
+        # Ensure the upload directory exists
+        if not os.path.exists(app.config["UPLOAD_FOLDER"]):
+            os.makedirs(app.config["UPLOAD_FOLDER"])
+
+        try:
+            image.save(image_path)
+            product.image_filename = image_filename
+        except Exception as e:
+            app.logger.error(f"Error saving image:", {e})
+            flash(f"Failed to save image: {str(e)}", "danger")
+            return redirect(url_for("edit_product", product_id=product_id))
+
+    # Convert price to float
+    # try:
+    #     price = float(price)
+    # except ValueError:
+    #     flash("Price must be a number.", "danger")
+    #     return redirect(url_for('home_page'))
+
+    # Update product details
+    product.name = name
+    product.price = price
+    product.description = description
+    db.session.commit()
+
+    flash("Product updated successfully!", "success")
+    return redirect(url_for("home_page"))
+
+
+# Delete product
+@app.route("/delete_product", methods=["POST"])
+@login_required
+def delete_product(product_id):
+    product_id = request.form.get("product_id")
+    product = Product.query.get(product_id)
+    if not product:
+        flash("Product not found", "danger")
+        return redirect(url_for("home_page"))
+
+    db.session.delete(product)
+    db.session.commit()
+    flash("product deleted successfully!", "success")
+    return redirect(url_for("home_page"))
 
 
 # QR generation for Product
