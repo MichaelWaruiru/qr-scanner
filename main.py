@@ -131,7 +131,7 @@ def add_product():
 @login_required
 def edit_product():
     product_id = request.form.get("product_id")
-    products = Product.query.get(product_id)
+    product = Product.query.get(product_id)
     if not product:
         flash("Product not found", "danger")
         return redirect(url_for("home_page"))
@@ -144,10 +144,10 @@ def edit_product():
     # Validate the inputs
     if not name or not price:
         flash("Invalid product data", "danger")
-        return redirct(url_for("edit_product", product_id=product_id))
+        return redirect(url_for("edit_product", product_id=product_id))
 
     # Validate and save image file
-    if image and allowed_image_file(image.file):
+    if image and allowed_image_file(image.filename):
         image_filename = secure_filename(image.filename)
         image_path = os.path.join(app.config["UPLOAD_FOLDER"], image_filename)
 
@@ -159,7 +159,7 @@ def edit_product():
             image.save(image_path)
             product.image_filename = image_filename
         except Exception as e:
-            app.logger.error(f"Error saving image:", {e})
+            app.logger.error(f"Error saving image: {e}")
             flash(f"Failed to save image: {str(e)}", "danger")
             return redirect(url_for("edit_product", product_id=product_id))
 
@@ -180,10 +180,26 @@ def edit_product():
     return redirect(url_for("home_page"))
 
 
+# Route to get product data
+@app.route("/get_product/<int:product_id>", methods=["GET"])
+@login_required
+def get_product(product_id):
+    product = Product.query.get(product_id)
+    if not product:
+        return jsonify({"error": "Product not found"}), 404
+
+    product_data = {
+        "id": product.id,
+        "name": product.name,
+        "price": product.price,
+        "description": product.description
+    }
+    return jsonify(product_data)
+
 # Delete product
 @app.route("/delete_product", methods=["POST"])
 @login_required
-def delete_product(product_id):
+def delete_product():
     product_id = request.form.get("product_id")
     product = Product.query.get(product_id)
     if not product:
@@ -192,7 +208,7 @@ def delete_product(product_id):
 
     db.session.delete(product)
     db.session.commit()
-    flash("product deleted successfully!", "success")
+    flash("Product deleted successfully!", "success")
     return redirect(url_for("home_page"))
 
 

@@ -27,10 +27,12 @@
             <!-- Link to view the QR code for each product -->
             <img src="{{ url_for('generate_qr', product_id=product.id) }}" alt="QR Code for {{ product.name }}" class="product-qr">
 
-            <!-- Admin options to edit and delete product -->
-            {% if current_user %}
-                <button class="btn btn-primary" onclick="openEditModal({{ product.id }}, '{{ product.name }}', {{ product.price }}, '{{ product.description }}')">Edit</button>
-                <button class="btn btn-danger" onclick="openDeleteModal({{ product.id }}, '{{ product.name }}')">Delete</button>
+            <!-- Check if admin is logged in to show edit and delete options -->
+            {% if session.get('admin_logged_in') %}
+                <div class="admin-actions">
+                    <button data-product-id="{{ product.id }}" onclick="openEditModal(this.getAttribute('data-product-id'))">Edit</button>
+                    <button data-product-id="{{ product.id }}" onclick="openDeleteModal(this.getAttribute('data-product-id'))">Delete</button>
+                </div>
             {% endif %}
         </li>
         {% endfor %}
@@ -127,30 +129,56 @@
             }
         }
 
-        // Function to open the edit modal
-        function openEditModal(id, name, price, description) {
-            document.getElementById('editProductId').value = id;
-            document.getElementById('editName').value = name;
-            document.getElementById('editPrice').value = price;
-            document.getElementById('editDescription').value = description;
-            document.getElementById('editModal').style.display = "block";
+        document.addEventListener('DOMContentLoaded', function() {
+            const editButtons = document.querySelectorAll('.edit-button');
+            const deleteButtons = document.querySelectorAll('.delete-button');
+
+            editButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const productId = button.getAttribute('data-product-id');
+                    openEditModal(productId);
+                });
+            });
+
+            deleteButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    const productId = button.getAttribute('data-product-id');
+                    openDeleteModal(productId);
+                });
+            });
+        });
+
+        // Open Edit Modal and populate form with product data
+        function openEditModal(productId) {
+            // Get product data from the server
+            fetch(`/get_product/${productId}`)
+                .then(response => response.json())
+                .then(product => {
+                    // Populate the form fields with product data
+                    document.getElementById('editProductId').value = product.id;
+                    document.getElementById('editName').value = product.name;
+                    document.getElementById('editPrice').value = product.price;
+                    document.getElementById('editDescription').value = product.description;
+                    // Show the edit modal
+                    document.getElementById('editModal').style.display = 'block';
+                })
+                .catch(error => console.error('Error fetching product data:', error));
         }
 
-        // Function to close the edit modal
+        // Close Edit Modal
         function closeEditModal() {
-            document.getElementById('editModal').style.display = "none";
+            document.getElementById('editModal').style.display = 'none';
         }
 
-        // Function to open the delete modal
-        function openDeleteModal(id, name) {
-            document.getElementById('deleteProductId').value = id;
-            document.getElementById('deleteProductName').innerText = name;
-            document.getElementById('deleteModal').style.display = "block";
+        // Open Delete Modal and set product ID
+        function openDeleteModal(productId) {
+            document.getElementById('deleteProductId').value = productId;
+            document.getElementById('deleteModal').style.display = 'block';
         }
 
-        // Function to close the delete modal
+        // Close Delete Modal
         function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = "none";
+            document.getElementById('deleteModal').style.display = 'none';
         }
     </script>
 {% endblock %}
