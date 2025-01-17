@@ -6,8 +6,6 @@ from functools import wraps
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "password")
 
-# app = Flask(__name__)
-# app.secret_key = os.urandom(24) # Set a secret key sessions
 
 def login_required(func):
   """Decorator to require login for specific routes."""
