@@ -30,8 +30,8 @@
             <!-- Check if admin is logged in to show edit and delete options -->
             {% if session.get('admin_logged_in') %}
                 <div class="admin-actions">
-                    <button data-product-id="{{ product.id }}" onclick="openEditModal(this.getAttribute('data-product-id'))">Edit</button>
-                    <button data-product-id="{{ product.id }}" onclick="openDeleteModal(this.getAttribute('data-product-id'))">Delete</button>
+                    <button data-product-id="{{ product.id }}" class="btn btn-primary" onclick="openEditModal(this.getAttribute('data-product-id'))">Edit</button>
+                    <button data-product-id="{{ product.id }}" class="btn btn-danger" onclick="openDeleteModal(this.getAttribute('data-product-id'))">Delete</button>
                 </div>
             {% endif %}
         </li>
@@ -39,39 +39,63 @@
     </ul>
 
     <!-- Edit Product Modal -->
-    <div id="editModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeEditModal()">&times;</span>
-            <h2>Edit Product</h2>
-            <form id="editProductForm" action="/edit_product" method="POST" enctype="multipart/form-data">
-                <input type="hidden" name="product_id" id="editProductId">
-                <label for="editName">Product Name:</label><br>
-                <input type="text" id="editName" name="name" required><br><br>
+    <div id="editModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="editModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Edit Product</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProductForm" action="/edit_product" method="POST" enctype="multipart/form-data">
+                        <input type="hidden" name="product_id" id="editProductId">
+                        <div class="form-group">
+                            <label for="editName">Product Name:</label>
+                            <input type="text" id="editName" name="name" class="form-control" required>
+                        </div>
 
-                <label for="editPrice">Product Price:</label><br>
-                <input type="number" step="0.01" id="editPrice" name="price" required><br>
+                        <div class="form-group">
+                            <label for="editPrice">Product Price:</label>
+                            <input type="number" step="0.01" id="editPrice" name="price" class="form-control" required>
+                        </div>
 
-                <label for="editDescription">Product Description:</label><br>
-                <textarea name="description" id="editDescription" required></textarea><br>
+                        <div class="form-group">
+                            <label for="editDescription">Product Description:</label>
+                            <textarea name="description" id="editDescription" class="form-control" required></textarea>
+                        </div>
 
-                <label for="editImage">Product Image:</label><br>
-                <input type="file" name="image" id="editImage" accept="image/*"><br><br>
+                        <div class="form-group">
+                            <label for="editImage">Product Image:</label>
+                            <input type="file" name="image" id="editImage" accept="image/*" class="form-control">
+                        </div>
 
-                <button type="submit">Update Product</button>
-            </form>
+                        <button type="submit" class="btn btn-primary">Update Product</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Delete Product Modal -->
-    <div id="deleteModal" class="modal" style="display:none;">
-        <div class="modal-content">
-            <span class="close" onclick="closeDeleteModal()">&times;</span>
-            <h2>Delete Product</h2>
-            <p>Are you sure you want to delete <span id="deleteProductName"></span>?</p>
-            <form id="deleteProductForm" action="/delete_product" method="POST">
-                <input type="hidden" name="product_id" id="deleteProductId">
-                <button type="submit" class="btn btn-danger">Delete</button>
-            </form>
+    <div id="deleteModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteModalLabel">Delete Product</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Are you sure you want to delete <span id="deleteProductName"></span>?</p>
+                    <form id="deleteProductForm" action="/delete_product" method="POST">
+                        <input type="hidden" name="product_id" id="deleteProductId">
+                        <button type="submit" class="btn btn-danger">Delete</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -159,26 +183,17 @@
                     document.getElementById('editName').value = product.name;
                     document.getElementById('editPrice').value = product.price;
                     document.getElementById('editDescription').value = product.description;
-                    // Show the edit modal
-                    document.getElementById('editModal').style.display = 'block';
+                    // Show the edit modal using Bootstrap
+                    $('#editModal').modal('show');
                 })
                 .catch(error => console.error('Error fetching product data:', error));
-        }
-
-        // Close Edit Modal
-        function closeEditModal() {
-            document.getElementById('editModal').style.display = 'none';
         }
 
         // Open Delete Modal and set product ID
         function openDeleteModal(productId) {
             document.getElementById('deleteProductId').value = productId;
-            document.getElementById('deleteModal').style.display = 'block';
-        }
-
-        // Close Delete Modal
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').style.display = 'none';
+            // Show the delete modal using Bootstrap
+            $('#deleteModal').modal('show');
         }
     </script>
 {% endblock %}
