@@ -6,9 +6,9 @@
     <h1>Welcome to QR Code Shop</h1>
 
     <!-- Display list of products -->
-    <ul class="products">
+    <ul class="products d-flex flex-wrap">
         {% for product in products %}
-        <li class="product-item">
+        <li class="product-item d-flex flex-column justify-content-between">
             <h3>{{ product.name }} - KES: {{ product.price }}</h3>
             {% if product.image_filename %}
                 <img src="{{ url_for('static', filename='uploads/' + product.image_filename) }}" alt="Image of {{ product.name }}" class="product-image">
@@ -29,7 +29,7 @@
 
             <!-- Check if admin is logged in to show edit and delete options -->
             {% if session.get('admin_logged_in') %}
-                <div class="admin-actions">
+                <div class="admin-actions d-flex justify-content-between mt-auto">
                     <button data-product-id="{{ product.id }}" class="btn btn-primary" onclick="openEditModal(this.getAttribute('data-product-id'))">Edit</button>
                     <button data-product-id="{{ product.id }}" class="btn btn-danger" onclick="openDeleteModal(this.getAttribute('data-product-id'))">Delete</button>
                 </div>
